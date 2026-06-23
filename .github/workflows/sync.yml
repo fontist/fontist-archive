@@ -1,0 +1,33 @@
+name: sync
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+  repository_dispatch:
+    types: [sync]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync from private repo
+        run: |
+          chmod +x bin/sync-from-private
+          ./bin/sync-from-private
+
+      - name: Commit and push
+        run: |
+          git config user.name "Fontist Bot"
+          git config user.email "bot@fontist.org"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Sync from fontist-archive-private $(date -u +%Y-%m-%dT%H:%M)"
+            git push
+          else
+            echo "No changes"
+          fi

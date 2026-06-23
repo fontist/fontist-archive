@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "Cloning private repo..."
+git clone --depth 1 "https://github.com/fontist/fontist-archive-private.git" /tmp/private
+
+echo "Syncing coverage (excluding macos/)..."
+rm -rf coverage
+mkdir -p coverage
+cd /tmp/private
+for item in coverage/*; do
+  [ -e "$item" ] || continue
+  base=$(basename "$item")
+  [ "$base" != "macos" ] && cp -r "$item" "../coverage/"
+done
+cd ..
+
+echo "Syncing woff (excluding macos/)..."
+rm -rf woff
+mkdir -p woff
+cd /tmp/private
+for item in woff/*; do
+  [ -e "$item" ] || continue
+  base=$(basename "$item")
+  [ "$base" != "macos" ] && cp -r "$item" "../woff/"
+done
+cd ..
+
+cp /tmp/private/fonts.json . 2>/dev/null || true
+rm -rf /tmp/private
+
+echo "Coverage: $(find coverage -name '*.json' | wc -l)"
+echo "Woff: $(find woff -name '*.woff' | wc -l)"
